@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Accelerator.Mobile",
-    "slug": "Accelerator.Mobile",
+    "name": "Accelerator.Mobile.Sandbox",
+    "slug": "accelerator-mobile-sandbox",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -21,10 +21,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.aberry273.acceleratormobilesandbox"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "76f32ef2-8902-47ad-87b3-3ba1cc5853b8"
+      }
+    },
+    "owner": "aberry273",
+    "plugins": [
+      "react-native-document-scanner-plugin"
+    ]
   }
 }
