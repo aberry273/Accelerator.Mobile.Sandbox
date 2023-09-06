@@ -75,13 +75,15 @@ const AclForm: React.FunctionComponent<IAclFormProps> = (
             key: `${i}.${field.data.name}.${field.key}`,
             change: (data) => { onFieldChange(field, data) },
             data: field.data,
-            options: field.options
+            options: field.options,
+            style: 'marginTop: 2'
           })
           : React.createElement(FieldComponents[0], {
             key: `${i}.null`,
             change: (data) => {onFieldChange(field, data) },
             data: field.data,
-            options: field.options
+            options: field.options,
+            style: 'marginTop: 2'
           })
         // Try avoiding the use of index as a key, it has to be unique!
         fields.push(element );
@@ -93,7 +95,7 @@ const AclForm: React.FunctionComponent<IAclFormProps> = (
     <View key={renderIndex} style={{
       flex: 1,
       flexDirection: 'column',
-      justifyContent: 'flex-center',
+      justifyContent: 'flex-start',
       margin: 8
     }}>
         {renderFields()}

@@ -11,6 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import ToDoPage from './pages/ToDoPage';
 import Receipts from './pages/ReceiptsPage';
+import FileStackPage from './pages/files/FileStackPage';
 import StoreStackPage from './pages/stores/StoreStackPage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -21,6 +22,21 @@ import MenuContent from './components/MenuContent';
 
 const Stack = createNativeStackNavigator(); 
 
+/*
+
+            <Tab.Screen name="ToDo" component={ToDoPage} options={{
+              tabBarLabel: 'ToDo',
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="person-outline" color={color} size={size} />
+              ),
+            }} />
+              <Tab.Screen name="Receipts" component={Receipts} options={{
+                tabBarLabel: 'Receipts',
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="receipt" color={color} size={size} />
+                ),
+              }} />
+              */
 export default function App() {
   const Drawer = createDrawerNavigator();
   const colorScheme = useColorScheme() as 'light' | 'dark';
@@ -39,18 +55,15 @@ export default function App() {
               tabBarInactiveTintColor: 'gray',
             })}
           >
-          <Tab.Screen name="ToDo" component={ToDoPage} options={{
-            tabBarLabel: 'ToDo',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="person-outline" color={color} size={size} />
-            ),
-          }} />
-            <Tab.Screen name="Receipts" component={Receipts} options={{
-              tabBarLabel: 'Receipts',
+        
+          <Tab.Screen name="Files" component={FileStackPage} options={{
+              tabBarLabel: 'Files',
+              headerShown: false,
               tabBarIcon: ({ color, size }) => (
-                <Ionicons name="receipt" color={color} size={size} />
+                <Ionicons name="document" color={color} size={size} />
               ),
             }} />
+          
             <Tab.Screen name="Stores" component={StoreStackPage} options={{
               tabBarLabel: 'Stores',
               headerShown: false,

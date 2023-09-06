@@ -113,9 +113,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace 'com.aberry273.acceleratormobile'
+    namespace 'com.aberry273.acceleratormobilesandbox'
     defaultConfig {
-        applicationId 'com.aberry273.acceleratormobile'
+        applicationId 'com.aberry273.acceleratormobilesandbox'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

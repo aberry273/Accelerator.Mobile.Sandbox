@@ -102,6 +102,45 @@ export const getItems = (db: SQLite.WebSQLDatabase, tableName: string, fn: SQLit
   }
 };
 
+export const searchItems = (db: SQLite.WebSQLDatabase, tableName: string, whereQueryObject: object, fn: SQLite.SQLStatementCallback) => {
+  try {
+    const todoItems: ToDoItem[] = [];
+    const whereQuery = createWhereQuery(whereQueryObject);
+    const query = `SELECT * FROM ${tableName} WHERE ${whereQuery};`;
+    
+    db.transaction((tx) => {
+        tx.executeSql(query, null,
+            // success callback which sends two things Transaction object and ResultSet Object
+            (_, { rows: { _array } }) => { fn(_array) },
+            // failure callback which sends two things Transaction object and Error
+            (txObj, error) => { console.log('getItems Error: ', error) }
+        )
+    });
+  } catch (error) {
+    console.error(error);
+    throw Error('Failed to get items !!!');
+  }
+};
+
+export const createWhereQuery = (whereQuery: object) => {
+  try {
+    const queryProperties = Object.keys(whereQuery);
+    const parsed = queryProperties
+      .map(key => `${key} = '${whereQuery[key]}' AND`)
+      .join(' ')
+      .slice(0, -4);
+
+    //WHERE Country = 'Spain' AND CustomerName LIKE 'G%';
+    return parsed;
+    
+  } catch (error) {
+    console.error(error);
+    throw Error('Failed to get items !!!');
+  }
+};
+
+
+
 export const saveItems = (db: SQLite.WebSQLDatabase, query: string, fn: SQLite.SQLStatementCallback) => {
     console.log('saveItems.start');
 

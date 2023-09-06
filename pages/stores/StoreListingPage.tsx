@@ -1,8 +1,8 @@
 import {useIsFocused} from '@react-navigation/native';
 import React, {useState, useCallback, useEffect } from 'react';
 import {View, ScrollView} from 'react-native';
-import {FAB, Portal, Provider, Title, Modal, Button, List} from 'react-native-paper';
-import { deleteStoreTable } from '../../services/store-service';
+import {FAB, Portal, Provider, Title, Modal, Button, List, Avatar} from 'react-native-paper';
+import { deleteStoreTable } from '../../services/store-db-service';
 import base from '../../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -79,6 +79,7 @@ const StoreListing: React.FunctionComponent<IStoreListingProps> = (props) => {
               key={store.id}
               title={store.name}
               description={`Added: ${new Date(store.created).toLocaleString('en-AU')}`}
+              left={ props => <Avatar.Text size={48} label={store.name} /> }
               style={{width: '100%'}}
               onPress={() => selectStore(store)}
               onLongPress={() => openHeader(store.name)}

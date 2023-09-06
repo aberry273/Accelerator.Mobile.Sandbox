@@ -1,18 +1,20 @@
 import {useIsFocused} from '@react-navigation/native';
 import React, {useState, useCallback, useEffect } from 'react';
 import {View} from 'react-native';
-import {FAB, Portal, Provider, Title, Text, Modal, Button, List, Card, Avatar, Chip} from 'react-native-paper';
+import {FAB, Portal, Provider, Title, Text, Modal, Button, List, Card, Avatar, Chip, Divider} from 'react-native-paper';
 import base from '../../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import ContextualActionBar from '../../components/ContextualActionBar';
+import { getSingleFile, getFilePath } from '../../services/fs-service';
 import MapsCard from '../../components/MapsCard';
-import { getStores, deleteStore } from '../../services/store-service';
 import ModalScreen from '../../components/ModalScreen';
 import DocumentScannerCard from '../../components/DocumentScannerCard';
+import { getFiles, searchFiles, createFile, deleteFile } from '../../services/file-db-service';
+import ImageGrid from '../../components/grids/ImageGrid';
 
 import AddFriendForm from '../../screens/AddFriendForm';
-import { StoreItem } from '../../models';
+import { FileItem, StoreItem } from '../../models';
 
 interface IStoreBrowsePageProps {
   onDelete: () => void;
@@ -24,6 +26,7 @@ interface IStoreBrowsePageProps {
 const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) => {
   const isScreenFocused = useIsFocused();
   const navigation = useNavigation();
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [fabIsOpen, setFabIsOpen] = useState(false);
   const [cabIsOpen, setCabIsOpen] = useState(false);
   const [tags, setSelectedTags] = useState(null);
@@ -34,7 +37,6 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
   const [isModalVisible, setIsModalVisible] = useState(false);
  
   useEffect(() => {
-    console.log('onInit');
     setStore();
   }, [props]); 
   
@@ -56,11 +58,41 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
     });
   }, [])
 
+
+  const loadFiles = useCallback(async () => {
+    try {
+      console.log('stackpage loadFiles()')
+      //const db = getDBConnection();
+      const query = {
+        storeId: selectedItem.id
+      }
+      searchFiles(query, (result) => { 
+        console.log('searchFiles');
+        if(result.length) {
+
+          const gridFiles = result.map(x => {
+            x.uri = getFilePath(x.id);
+            return x;
+          });
+
+          setFiles(gridFiles);
+        } else {
+          console.log('No files found');
+        }
+      })
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+ 
   const setStore = useCallback(() => {
     if(props.store != null) {
       setSelectedItem(props.store);
       //setNavigation(props.store.name);
-      setNavigation('Browse Store');
+      setNavigation(props.store.name);
+ 
+      loadFiles();
+ 
     }
   }, []); 
   
@@ -73,34 +105,39 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
       props.onCopy(props.store);
       navigation.goBack('Stores');
   }, []);
+
    // <DocumentScannerCard />
   return (
     <View style={base.left}>
       
       { selectedItem != null && 
         <Card>
-          <Card.Title title={selectedItem.name} subtitle="Card Subtitle"  />
-          <Card.Content>
-            <Text variant="titleLarge">{selectedItem.description}</Text>
-            <Text variant="bodyMedium">tags:</Text>
-            <View style={[styles.container]}>
-          {
-            selectedItem.tags.split(',')?.map((chip, i) => (
-              <Chip key={i +":"+ chip}>{chip}</Chip>
-            ))
-          }
+          <Card.Content> 
+          <View style={[styles.mapContainer]}>
+            <MapsCard latitude={selectedItem.lat} longitude={selectedItem.lng}  />
           </View>
-          <MapsCard latitude={selectedItem.lat} longitude={selectedItem.lng}  />
-           
-          </Card.Content>
-          <Card.Cover source={{ uri: 'https://picsum.photos/700' }} />
-          <Card.Actions>
-            <Button>Cancel</Button>
-            <Button>Ok</Button>
-          </Card.Actions>
+            <View style={[styles.container]}>
+              <Text variant="bodyMedium">Category:</Text> 
+              <Chip >{selectedItem.category}</Chip>
+              <Divider />
+            </View>
+            <View style={[styles.container]}>
+              <Text variant="bodyMedium">Tags:</Text> 
+                {
+                  selectedItem.tags.split(',')?.map((chip, i) => (
+                    <Chip key={i +":"+ chip} style={[styles.chip]}>{chip}</Chip>
+                  ))
+                } 
+            </View>
+          </Card.Content> 
+              
+          <Card.Title title="" subtitle={selectedItem.description}  />
+            
+          <ImageGrid {...{
+              items: files
+            }}></ImageGrid>
         </Card>
       }
-      
       <Portal>
         <FAB
           icon="camera"
@@ -124,6 +161,13 @@ const localStyles = StyleSheet.create({
   },
 })
 const styles = StyleSheet.create({
+  mapContainer: {
+    display: "flex",
+    margin: 0,
+    padding: 0,
+    width: "100%",
+    height: 175,
+  },  
   container: {
     marginTop: 8,
     display: "flex",

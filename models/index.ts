@@ -14,11 +14,13 @@ export type ToDoItem = {
     category: string;
     subcategory: string;
   };
+  
 
-  export type ReceiptItem = {
+  export type FileItem = {
     id: string;
-    reference: string;
-    store: string;
+    storeId: string;
+    file: string;
+    name: string;
     date: Date,
     category: string;
     tags: string;

@@ -6,7 +6,7 @@ import base from '../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation, NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getStores, createStore, deleteStore } from '../../services/store-service';
+import { getStores, createStore, deleteStore } from '../../services/store-db-service';
 import { StoreItem } from '../../models';
 import ContextualActionBar from '../../components/ContextualActionBar';
 import ModalScreen from '../../components/ModalScreen'; 
@@ -93,10 +93,19 @@ function Root() {
   }, []);
 
 
+  const saveFile = useCallback(async (file) => {
+    console.log(file);
+    navigation.goBack('Stores');
+    //console.log(selectedStore);
+  }, []);
+
   const browseStoreState = {
     onDelete: removeStore,
     onCopy: copyStore,
     store: selectedStore
+  }
+  const scanFileState = {
+    onSave: saveFile
   }
   const addStoreState = {
     onCreate: addStore
@@ -132,7 +141,7 @@ function Root() {
       <StoreStack.Screen name="ScanFile" options={{
         headerTitle: 'Scan File'
       }}>
-        {props => <ScanFilePage {...browseStoreState} />}
+        {props => <ScanFilePage {...scanFileState} />}
       </StoreStack.Screen>
     </StoreStack.Navigator>
   );

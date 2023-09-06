@@ -2,7 +2,6 @@ import {useIsFocused} from '@react-navigation/native';
 import React, {useState, useCallback, useEffect } from 'react';
 import {View} from 'react-native';
 import {FAB, Portal, Provider, Title, Text, Modal, Button, List} from 'react-native-paper';
-import { createStore, getStores } from '../../services/store-service';
 import base from '../../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -78,12 +77,26 @@ const tempFormData =
     {
       component: 'SelectField',
       data: {
-        label: 'Select',
-        name: 'Type',
-        placeholder: 'Bike store..'
+        label: 'Category',
+        name: 'Category',
+        placeholder: 'Shopping',
+        items: [
+          {
+            key: 1,
+            value: 'Shopping'
+          },
+          {
+            key: 2,
+            value: 'Services'
+          },
+          {
+            key: 3,
+            value: 'Health'
+          },
+        ]
       },
       options: {
-        hide: true
+        hide: false
       }
     },
     {

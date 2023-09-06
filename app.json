@@ -15,7 +15,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aberry273.acceleratormobilesandbox",
+      "buildNumber": "0.0.1"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +31,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "76f32ef2-8902-47ad-87b3-3ba1cc5853b8"
+        "projectId": "aaf57b60-e483-448e-ac05-0c3619df9c19"
       }
     },
     "owner": "aberry273",

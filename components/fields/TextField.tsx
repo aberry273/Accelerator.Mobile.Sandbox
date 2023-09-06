@@ -20,8 +20,6 @@ const TextField: React.FunctionComponent<IAclFormFieldProps> = (
   }
 
   React.useEffect(() => {
-    console.log('change textf')
-    console.log(props.data.value)
     setLabel(props.data.label);
     setValue(props.data.value);
   }, [props]);
