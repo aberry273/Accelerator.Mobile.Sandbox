@@ -42,6 +42,19 @@ const AclForm: React.FunctionComponent<IAclFormProps> = (
 
   useEffect (() => {
     console.log('On Prop Change');
+    console.log(props.data);
+    if(props.data == null) return;
+    for(var i = 0; i < props.data.fields.length; i++) {
+      const field = props.data.fields[i];
+      const fieldName = field.data.name.toLowerCase();
+      if (field.data.value === null || field.data.value === 'undefined')
+        continue;
+      else if (field.component == 'ChipField' && field.data.value!!) {
+        formData[fieldName] = field.data.value.split(',');
+      } else {
+        formData[fieldName] = field.data.value;
+      }
+    }
     setFormData(formData);
   }, [props])
  
@@ -53,6 +66,7 @@ const AclForm: React.FunctionComponent<IAclFormProps> = (
 
   const onFieldChange = useCallback((field, data) => {
     updateFormData(field, data);
+    // if the field has a change function, emit the change to the form
     if (typeof field.change === 'function') {
       field.change(field, data);
     }

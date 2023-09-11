@@ -11,6 +11,7 @@ import MapsCard from '../../components/MapsCard';
 import ModalScreen from '../../components/ModalScreen';
 import DocumentScannerCard from '../../components/DocumentScannerCard';
 import { getFiles, searchFiles, createFile, deleteFile } from '../../services/file-db-service';
+import { getStore } from '../../services/store-db-service';
 import ImageGrid from '../../components/grids/ImageGrid';
 
 import AddFriendForm from '../../screens/AddFriendForm';
@@ -19,6 +20,7 @@ import { FileItem, StoreItem } from '../../models';
 interface IStoreBrowsePageProps {
   onDelete: () => void;
   onCopy: () => void;
+  onEdit: () => void;
   store: StoreItem,
   title: string
 }
@@ -51,6 +53,7 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
           {...props}
           title={title}
           onClose={goBack}
+          onEdit={editStore}
           onDelete={removeStore}
           onCopy={copyStore}
         />
@@ -63,6 +66,7 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
     try {
       console.log('stackpage loadFiles()')
       //const db = getDBConnection();
+      if(selectedItem == null) return;
       const query = {
         storeId: selectedItem.id
       }
@@ -87,11 +91,19 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
  
   const setStore = useCallback(() => {
     if(props.store != null) {
-      setSelectedItem(props.store);
-      //setNavigation(props.store.name);
+      //get store from id, this ensure it's always up to date when loading
+      //I.E. after a user edits the store
+      
       setNavigation(props.store.name);
- 
-      loadFiles();
+      getStore(props.store.id, (result) => { 
+        setSelectedItem(result);
+        //setNavigation(props.store.name);
+        setNavigation(result.name);
+   
+        loadFiles();
+      })
+
+     
  
     }
   }, []); 
@@ -106,6 +118,10 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
       navigation.goBack('Stores');
   }, []);
 
+  const editStore = useCallback(async () => {
+      //props.onEdit(props.store);
+      navigation.push('EditStore', props.store);
+    }, []);
    // <DocumentScannerCard />
   return (
     <View style={base.left}>
@@ -124,14 +140,17 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
             <View style={[styles.container]}>
               <Text variant="bodyMedium">Tags:</Text> 
                 {
-                  selectedItem.tags.split(',')?.map((chip, i) => (
+                  selectedItem != null && selectedItem.tags != null && 
+                    selectedItem.tags.split(',')?.map((chip, i) => (
                     <Chip key={i +":"+ chip} style={[styles.chip]}>{chip}</Chip>
                   ))
                 } 
             </View>
+            <View style={[styles.container]}>
+              <Text variant="bodyMedium">Description:</Text> 
+            </View>
+              <Text variant="">{selectedItem.description}</Text> 
           </Card.Content> 
-              
-          <Card.Title title="" subtitle={selectedItem.description}  />
             
           <ImageGrid {...{
               items: files

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Platform } from 'react-native';
 import { enablePromise, SQLiteDatabase } from 'react-native-sqlite-storage';
 import { StoreItem, ToDoItem } from '../models';
-import { getDBConnection, getItems, saveItems, createTable, getTableName, getColName, deleteTable, clearTable, deleteItem } from './core-db-service';
+import { getDBConnection, getItems, getItem, saveItems, executeQuery, createTable, getTableName, getColName, deleteTable, clearTable, deleteItem, searchItems } from './core-db-service';
 import * as SQLite from "expo-sqlite";
 import uuid from 'react-native-uuid';
 
@@ -28,6 +28,14 @@ const createInsertQuery = (items) => {
   return query;
 };
 
+const createUpdateQuery = (item) => {
+  const query =
+  `UPDATE ${tableName}
+    SET name='${item.name}',description='${item.description}',category='${item.category}',lat='${item.lat}',lng='${item.lng}',tags='${item.tags}'
+    WHERE id = '${item.id}'` 
+  return query;
+};
+
 const createStore = (item, fn: SQLite.SQLStatementCallback) => {
   try {
     const db = getDBConnection(dbName);
@@ -35,19 +43,29 @@ const createStore = (item, fn: SQLite.SQLStatementCallback) => {
     
     item.id = uuid.v4();
     item.created = new Date().toISOString();
-    /*
-    const newItem = {
-      id: uuid.v4(),
-      created: new Date().toISOString(),
-      name: item.name,
-      lat: item.lat,
-      lng: item.lng,
-      tags: item.tags,
-    };
-    */
+  
     const items = [item];
     const query = createInsertQuery(items);
     saveItems(db, query, fn);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const searchStores = (query, fn: SQLite.SQLStatementCallback) => {
+  try {
+    const db = getDBConnection(dbName);
+    searchItems(db, tableName, query, fn);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const updateStore = (item, fn: SQLite.SQLStatementCallback) => {
+  try {
+    const db = getDBConnection(dbName);
+    const query = createUpdateQuery(item);
+    executeQuery(db, query, fn);
   } catch (error) {
     console.error(error);
   }
@@ -65,6 +83,15 @@ const deleteStore = (storeId, fn: SQLite.SQLStatementCallback) => {
 
 };
 
+const getStore = (id: string, fn: SQLite.SQLStatementCallback) => {
+  try {
+    const db = getDBConnection(dbName);
+   
+    return getItem(db, tableName, id, fn);
+  } catch (error) {
+    console.error(error);
+  }
+};
 const getStores = (fn: SQLite.SQLStatementCallback) => {
   try {
     const db = getDBConnection(dbName);
@@ -78,7 +105,6 @@ const getStores = (fn: SQLite.SQLStatementCallback) => {
 
 const deleteStoreTable = (fn: SQLite.SQLStatementCallback) => {
   try {
-    console.log('deleteStoreTable')
     const db = getDBConnection(dbName);
     
     return deleteTable(db, tableName);
@@ -88,5 +114,5 @@ const deleteStoreTable = (fn: SQLite.SQLStatementCallback) => {
 };
 
 export {
-  createStore, getStores, deleteStore, deleteStoreTable
+  createStore, getStores, getStore, updateStore, searchStores, deleteStore, deleteStoreTable
 }

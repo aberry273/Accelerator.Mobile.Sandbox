@@ -57,8 +57,6 @@ const SelectField : React.FunctionComponent<IAclFormFieldProps> = (
     setValue(value);
     if (props.data.items != null)
       setItems(props.data.items || []);
-      console.log('ITEMS SET');
-      console.log(props.data.items);
   }, []);
   
 

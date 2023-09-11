@@ -13,9 +13,14 @@ import ModalScreen from '../../components/ModalScreen';
 import StoreAddPage from './StoreAddPage';
 import StoreListingPage from './StoreListingPage';
 
+import { TextField } from '../../components/fields';
+
+
 interface IStoreListingProps {
   items: StoreItem[],
+  queryText: string,
   onSelect: () => void;
+  onSearch: () => void;
 }
 
 const StoreListing: React.FunctionComponent<IStoreListingProps> = (props) => {
@@ -43,37 +48,45 @@ const StoreListing: React.FunctionComponent<IStoreListingProps> = (props) => {
     setCabIsOpen(!cabIsOpen);
   }, [cabIsOpen]);
 
+  const searchStores = useCallback((query) => {
+    props.onSearch(query);
+  }, [])
 
   const selectStore = useCallback(async (store) => {
-    console.log('selectStore');
     props.onSelect(store);
   }, []);
   
-  useEffect(() => {
-    if (cabIsOpen) {
-      navigation.setOptions({
-        // have to use props: any since that's the type signature
-        // from react-navigation...
-        header: (props: any) => (<ContextualActionBar
-            {...props}
-            title={selectedItemName}
-            close={closeHeader}
-          />),
-      });
-    } else {
-      navigation.setOptions({header: undefined});
-    }
-  }, [cabIsOpen]);
-
   //description='Mar 18 | 3:31 PM'
   return (
     <View style={base.left}>
       
       <ScrollView>
         <List.Section>
-        <List.Subheader>
-          Saved stores
-        </List.Subheader>
+          <TextField 
+            change={(data) => { searchStores(data) }}
+            data={  {
+              label: 'Search',
+              name: 'Search',
+              value: props.queryText,
+              placeholder: 'Search'
+            } }
+            options={ { 
+              mode: 'flat'
+            }}
+            style='marginTop: 2' />
+        </List.Section>
+        { props.items.length == 0 &&
+          <List.Section>
+            <List.Subheader>
+              No stores found
+            </List.Subheader>
+          </List.Section>
+        }
+        { props.items.length > 0 &&
+        <List.Section>
+          <List.Subheader>
+            Saved stores
+          </List.Subheader>
           {props.items.map((store) => (
             <List.Item
               key={store.id}
@@ -86,6 +99,7 @@ const StoreListing: React.FunctionComponent<IStoreListingProps> = (props) => {
             />
           ))}
           </List.Section>
+        }
       </ScrollView>
  
       <Button {...props} icon="delete" mode="text" onPress={() => deleteStoreTable() }>Delete Table</Button>

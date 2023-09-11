@@ -6,7 +6,7 @@ import base from '../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation, NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getStores, createStore, deleteStore } from '../../services/store-db-service';
+import { getStores, createStore, searchStores, updateStore, deleteStore } from '../../services/store-db-service';
 import { StoreItem } from '../../models';
 import ContextualActionBar from '../../components/ContextualActionBar';
 import ModalScreen from '../../components/ModalScreen'; 
@@ -17,6 +17,7 @@ const StoreStack = createNativeStackNavigator();
 
 import StoreListingPage from './StoreListingPage';
 import StoreAddPage from './StoreAddPage';
+import StoreEditPage from './StoreEditPage';
 import StoreBrowsePage from './StoreBrowsePage';
 import ScanFilePage from './../ScanFilePage';
 
@@ -25,6 +26,7 @@ const testFunction = () => {
 }
 
 function Root() {
+  const [queryText, setQueryText] = useState('');
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [selectedStore, setSelectedStore] = useState<StoreItem>(null);
   const navigation = useNavigation();
@@ -51,19 +53,42 @@ function Root() {
       console.error(error);
     }
   }, []);
+
+  const filterStores = useCallback(async (queryText) => {
+    try {
+      console.log('stackpage filterStores()')
+      //const db = getDBConnection();
+      searchStores({ name: queryText }, (result) => { 
+        setStores(result);
+        setQueryText(queryText);
+      })
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
   
   useEffect(() => {
     loadStores();
   }, [loadStores]);
 
   const addStore = useCallback((store) => {
-    console.log(store);
+
     createStore(store, (result) => { 
       console.log('addStore response');
      
       loadStores();
     })
 
+  }, []);
+
+  const editStore = useCallback(async (store) => {
+    try {
+      updateStore(store, (result) => { 
+        loadStores();
+      })
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
   const copyStore = useCallback(async (store) => {
@@ -102,6 +127,7 @@ function Root() {
   const browseStoreState = {
     onDelete: removeStore,
     onCopy: copyStore,
+    //onEdit: updateStore,
     store: selectedStore
   }
   const scanFileState = {
@@ -110,9 +136,15 @@ function Root() {
   const addStoreState = {
     onCreate: addStore
   }
+  const editStoreState = {
+    data: {},
+    onUpdate: editStore
+  }
   const listingStoreState = {
     items: stores,
-    onSelect: selectStore
+    queryText: queryText,
+    onSelect: selectStore,
+    onSearch: filterStores
   }
   //component={StoreBrowsePage} /
   return (
@@ -137,6 +169,11 @@ function Root() {
         headerTitle: 'Browse Store'
       }}>
         {props => <StoreBrowsePage {...browseStoreState} />}
+      </StoreStack.Screen>
+      <StoreStack.Screen name="EditStore" options={{
+        headerTitle: 'Edit Store'
+      }}>
+        {props => <StoreEditPage {...editStoreState} />}
       </StoreStack.Screen>
       <StoreStack.Screen name="ScanFile" options={{
         headerTitle: 'Scan File'

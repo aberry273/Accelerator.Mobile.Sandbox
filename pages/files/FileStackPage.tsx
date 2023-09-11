@@ -124,6 +124,7 @@ function Root() {
   const removeFile = useCallback(async (file) => {
     try {
       loadFiles();
+      if(file == null) return;
       const id = file.id;
       //file.map is undefined
       const ids = files.map(x => x.id);

@@ -98,8 +98,41 @@ export const getItems = (db: SQLite.WebSQLDatabase, tableName: string, fn: SQLit
     });
   } catch (error) {
     console.error(error);
-    throw Error('Failed to get items !!!');
+    throw Error('Failed to get items');
   }
+};
+
+
+export const getItem = (db: SQLite.WebSQLDatabase, tableName: string, id: string, fn: SQLite.SQLStatementCallback) => {
+  try {
+    const todoItems: ToDoItem[] = [];
+    const query = `SELECT * FROM ${tableName} WHERE id = '${id}' ORDER BY ROWID ASC LIMIT 1;`;
+    
+    db.transaction((tx) => {
+        tx.executeSql(query, null,
+            // success callback which sends two things Transaction object and ResultSet Object
+            (_, { rows: { _array } }) => { fn(_array[0]) },
+            // failure callback which sends two things Transaction object and Error
+            (txObj, error) => { console.log('getItem Error: ', error) }
+        )
+    });
+  } catch (error) {
+    console.error(error);
+    throw Error('Failed to get item');
+  }
+};
+
+export const executeQuery = (db: SQLite.WebSQLDatabase, query: string, fn: SQLite.SQLStatementCallback) => {
+  // create table if not exists
+  
+  db.transaction((tx) => {
+      tx.executeSql(query, null,
+          // success callback which sends two things Transaction object and ResultSet Object
+          (_, { rows: { _array } }) => { fn(_array) },
+          // failure callback which sends two things Transaction object and Error
+          (txObj, error) => { console.log('executeQuery Error ', error) }
+          )
+      });
 };
 
 export const searchItems = (db: SQLite.WebSQLDatabase, tableName: string, whereQueryObject: object, fn: SQLite.SQLStatementCallback) => {
@@ -126,7 +159,12 @@ export const createWhereQuery = (whereQuery: object) => {
   try {
     const queryProperties = Object.keys(whereQuery);
     const parsed = queryProperties
-      .map(key => `${key} = '${whereQuery[key]}' AND`)
+      .map(key => {
+        if(typeof(whereQuery[key]) == 'string')
+          return `${key} LIKE '%${whereQuery[key]}%' AND`
+        return `${key} = '${whereQuery[key]}' AND`
+        }
+      )
       .join(' ')
       .slice(0, -4);
 

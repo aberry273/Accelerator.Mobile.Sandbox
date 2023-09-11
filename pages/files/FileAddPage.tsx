@@ -132,9 +132,10 @@ const FileAddPage: React.FunctionComponent<IFileAddPageProps> = (props) => {
   // Form
  
   useEffect(() => {
-    tempFormData.fields[2].data.items = props.stores != null ? props.stores.map(x => { return {
-      name: x.name, value: x.id }
-    }) : [];
+    tempFormData.fields[2].data.items = 
+      (props.stores != null)
+      ? props.stores.map(x => { return { name: x.name, value: x.id } }) 
+      : [];
     setFormState(tempFormData);
   });
 
