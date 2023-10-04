@@ -38,7 +38,7 @@ const TextField: React.FunctionComponent<IAclFormFieldProps> = (
       right={props.options.right}
       disabled={props.options.disabled}
       error={props.options.error}
-      
+      secureTextEntry={props.options.secureTextEntry}
       selectionColor={props.options.selectionColor}
       cursorColor={props.options.cursorColor}
       underlineColor={props.options.underlineColor}

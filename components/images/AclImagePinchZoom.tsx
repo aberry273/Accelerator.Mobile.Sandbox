@@ -1,7 +1,7 @@
-import React, { useState, useRef, createRef } from 'react';
-import { View, Text, Image, Animated, Dimensions, StyleSheet } from 'react-native';
-import { PanGestureHandler, PinchGestureHandler, State } from 'react-native-gesture-handler';
-
+import React, { useState, useRef, createRef, useEffect } from 'react';
+import { View, Text, Image, Animated, Dimensions, StyleSheet, PanResponder } from 'react-native';
+import { PanGestureHandler, PinchGestureHandler, GestureHandlerRootView, State } from 'react-native-gesture-handler';
+import FastImage from 'react-native-fast-image';
 
 interface IAclPinchZoomImageProps {
   uri: String;
@@ -14,25 +14,43 @@ const PinchZoomImage: React.FunctionComponent<IAclPinchZoomImageProps> = (
 ) => {
   const [panEnabled, setPanEnabled] = useState(false);
 
+  const pan = useRef(new Animated.ValueXY()).current;
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
 
-  const pinchRef = createRef();
-  const panRef = createRef();
+  const pinchRef = useRef(null);
+  const panRef = useRef(null);
 
-  const onPinchEvent = Animated.event([{
-    nativeEvent: { scale }
-  }],
-    { useNativeDriver: true });
+  const test = useEffect(() => {
+    console.log('load12');
+  }, []);
 
-  const onPanEvent = Animated.event([{
+  const onPinchEvent = Animated.event(
+    [{
+      nativeEvent: { scale }
+    }],
+    { useNativeDriver: true }
+  );
+
+  const onPanEvent = Animated.event(
+    [{
     nativeEvent: {
-      translationX: translateX,
-      translationY: translateY
-    }
-  }],
-    { useNativeDriver: true });
+        translationX: translateX,
+        translationY: translateY
+      }
+    }],
+    { useNativeDriver: true }
+  );
+
+  const init = useEffect(() => {
+     
+  }, [])
+
+
+  const handlePanStateChange = ({ nativeEvent }) => {
+    //console.log('handlePanStateChange');
+  }
 
   const handlePinchStateChange = ({ nativeEvent }) => {
     // enabled pan only after pinch-zoom
@@ -62,8 +80,7 @@ const PinchZoomImage: React.FunctionComponent<IAclPinchZoomImageProps> = (
     }
   };
 
-  return (
-    <View style={[ styles.container ]}>
+  return (  
       <PanGestureHandler
         onGestureEvent={onPanEvent}
         ref={panRef}
@@ -71,37 +88,51 @@ const PinchZoomImage: React.FunctionComponent<IAclPinchZoomImageProps> = (
         enabled={panEnabled}
         failOffsetX={[-1000, 1000]}
         shouldCancelWhenOutside
+        onHandlerStateChange={handlePanStateChange}
+        minPointers={1}
+        maxPointers={1}
       >
-        <Animated.View>
+        <Animated.View style={[styles.animatedContainer]}>
           <PinchGestureHandler
             ref={pinchRef}
             onGestureEvent={onPinchEvent}
             simultaneousHandlers={[panRef]}
-            onHandlerStateChange={handlePinchStateChange}
-          >
+            onHandlerStateChange={handlePinchStateChange}  
+          > 
             <Animated.Image
-              source={{ uri: 'https://i.picsum.photos/id/1039/6945/4635.jpg?hmac=tdgHDygif2JPCTFMM7KcuOAbwEU11aucKJ8eWcGD9_Q' }}
+              source={{ uri: props.uri }}
               style={{
                 width: '100%',
                 height: '100%',
                 transform: [{ scale }, { translateX }, { translateY }]
               }}
               resizeMode="contain"
-            />
-
+            /> 
           </PinchGestureHandler>
         </Animated.View>
-
-      </PanGestureHandler>
-    </View>
+      </PanGestureHandler>  
   );
 };
 
 export default PinchZoomImage;
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1
-  }
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  animatedContainer: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
+  },
+  fullImageStyle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    width: '98%',
+    resizeMode: 'contain',
+  },
 });

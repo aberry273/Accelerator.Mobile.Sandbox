@@ -3,16 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, Polyline } from "react-native-maps";
 import {FAB, Portal, Provider, Title, Text, Modal, Button, List} from 'react-native-paper';
 import DocumentScanner from 'react-native-document-scanner-plugin'
-
+import { IAclCardsMapProps } from '.';
  
-interface IMapsCardProps {
-  title: string;
-  latitude: number;
-  longitude: number;
-  submit: () => void;
-}
-
-const MapsCard: React.FunctionComponent<IMapsCardProps> = (
+const AclCardsMap: React.FunctionComponent<IAclCardsMapProps> = (
   props
 ) => {
   const mapRef = useRef(null);
@@ -54,7 +47,7 @@ const MapsCard: React.FunctionComponent<IMapsCardProps> = (
           }}
         />
       </MapView>
-      <Button onPress={() => goToStore()} title="Go to Store" />
+      <Button onPress={() => goToStore()} title={props.title} />
     </View>
   );
 }
@@ -75,4 +68,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapsCard;
+export default AclCardsMap;

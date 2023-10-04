@@ -4,17 +4,16 @@ import {View, Image, ScrollView, TouchableWithoutFeedback, TouchableOpacity, Ima
 import {FAB, Portal, Provider, Title, Text, Modal, Button, List, Card, Avatar, Chip, Divider} from 'react-native-paper';
 import base from '../../styles/base';
 import { StyleSheet } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import ContextualActionBar from '../../components/ContextualActionBar';
-import { getSingleFile, getFilePath } from '../../services/fs-service';
 import FastImage from 'react-native-fast-image';
-import MapsCard from '../../components/MapsCard';
-import ModalScreen from '../../components/ModalScreen';
-import PinchZoomImage from '../../components/images/PinchZoomImage';
-import DocumentScannerCard from '../../components/DocumentScannerCard';
 import AclModalImage from '../../components/modals/AclModalImage';
+import Share from 'react-native-share';
 
-import AddFriendForm from '../../screens/AddFriendForm';
+import FilesService from '../../services/FilesService';
+import StoresService from '../../services/StoresService';
+
+ 
 import { FileItem } from '../../models';
 import CardActions from 'react-native-paper/lib/typescript/src/components/Card/CardActions';
 
@@ -23,45 +22,73 @@ interface IFileBrowsePageProps {
   onCopy: () => void;
   onEdit: () => void;
   file: FileItem,
-  title: string
+  id: string,
+  name: string
 }
 
 const FileBrowsePage: React.FunctionComponent<IFileBrowsePageProps> = (props) => {
   const isScreenFocused = useIsFocused();
-  const navigation = useNavigation();
-  const [fabIsOpen, setFabIsOpen] = useState(false);
-  const [cabIsOpen, setCabIsOpen] = useState(false);
-  const [tags, setSelectedTags] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedItemName, setSelectedItemName] = useState('');
-  const [selectedItemLat, setSelectedItemLat] = useState('');
-  const [testText, setTestText] = useState('');
+  const navigation = useNavigation(); 
+  const [storeName, setStoreName] = useState(''); 
+  const [selectedItem, setSelectedItem] = useState(null); 
   const [showModal, setShowModal] = useState(false);
+  const route = useRoute();
  
+  const initializeState = async () => {
+    if(selectedItem != null) return;
+      //Set name so not empty
+      setNavigation(' ');
+      if(props.id == null) return;
+      const result = await FilesService.Instance().Get(props.id);
+      setSelectedItem(result);
+      //get store name
+      const store = await StoresService.Instance().Get(result.storeId);
+      const storeName = store != null ? store.name : '';
+      setStoreName(storeName);
+
+      setNavigation(result.name);
+  }
+
+  // On mount
   useEffect(() => {
-    console.log('onInit');
-    setFile();
+    //Async wrapper
+    (async () => {
+      await initializeState();
+    })();
+    //unmount function
+    return () => {
+      console.log('FileBrowsePage.Unmount');
+    };
   }, [props]);
+
+  // On navigation.goBack()
+  useEffect(() => {
+    (async () => {
+      // Reset page state
+      setSelectedItem(null);
+      await initializeState();
+    })();
+    //reload
+  }, [isScreenFocused]);
   
-  const goBack = useCallback(async () => { 
+  const goBack = useCallback(() => {
     navigation.goBack('Files');
   });
 
-  const removeFile = useCallback(async () => {
-    console.log('remove');
-    props.onDelete(props.file);
+  const removeFile = useCallback(() => {
+    props.onDelete(props.id);
     navigation.goBack('Files');
-  }, []);
+  }, [props.id]);
 
-  const copyFile = useCallback(async () => {
-    props.onCopy(props.file);
+  const copyFile = useCallback(() => {
+    props.onCopy(props.id);
     navigation.goBack('Files');
-  }, []);
-
-  const editFile = useCallback(async () => {
-    props.onEdit(props.file);
-    navigation.goBack('Files');
-  }, []);
+  }, [props.id]);
+ 
+  const editFile = useCallback(() => {
+    props.onEdit(props.id);
+    //navigation.goBack('Files');
+  }, [props.id]);
 
   const setNavigation = useCallback((title) => {
     navigation.setOptions({
@@ -86,17 +113,35 @@ const FileBrowsePage: React.FunctionComponent<IFileBrowsePageProps> = (props) =>
     setShowModal(!showModal);
   }, []);
 
-  const setFile = useCallback(() => {
-    if(props.file != null) {
-      setSelectedItem(props.file);
-      //setNavigation(props.store.name);
-      setNavigation('Browse File');
-    }
-  }, []); 
-
+ 
   const zoomImageProps = {
     uri: ''
   }; 
+
+  const shareOptions = {
+    appId: 1234,
+    title: 'Share via email',
+    message: 'some message',
+    url: 'some share url',
+    social: Share.Social.EMAIL,
+    whatsAppNumber: "9199999999",  // country code + phone number
+    filename: 'test' , // only for base64 file in Android
+  };
+
+  const menuItems = [
+    {
+      label: 'Share by email',
+      icon: 'home',
+      onPress: async () => { 
+        console.log('share');
+        //const { uri: props.uri } = await FileSystem.downloadAsync(remoteUri, FileSystem.documentDirectory + 'name.ext');
+        Share.shareSingle(shareOptions)
+        .then((res) => { console.log(res) })
+        .catch((err) => { err && console.log(err); });
+        
+       }
+    }
+  ];
   
    // <DocumentScannerCard />
 
@@ -107,42 +152,44 @@ const FileBrowsePage: React.FunctionComponent<IFileBrowsePageProps> = (props) =>
         <Card onPress={handleModalShow}>
           <Card.Title title={selectedItem.name} subtitle="Card Subtitle"  />
           <Card.Content>
+          { storeName != 'zze' && 
+            <View>
+              <Text variant="bodyMedium">Store</Text>
+              <Chip>{storeName}</Chip>
+            </View>
+          }
 
             <Text variant="bodyMedium">Category</Text>
               <Chip>{selectedItem.category}</Chip>
 
               <Text variant="bodyMedium">Tags:</Text> 
-            {
-              selectedItem.tags.split(',')?.map((chip, i) => (
-                <Chip key={i +":"+ chip}>{chip}</Chip>
-              ))
-            } 
-           
+              <View style={[styles.chipContainer]}>
+              {
+                selectedItem.tags.split(',')?.map((chip, i) => (
+                  <Chip key={i +":"+ chip} style={[styles.chip]}>{chip}</Chip>
+                ))
+              } 
+              </View>           
             <Divider />
-          
-            <Text variant="titleLarge">StoreID: {selectedItem.storeId}</Text>
             <Text variant="titleLarge">{selectedItem.description}</Text>
-            
           </Card.Content> 
-          
-          <Card.Cover source={{ uri: getFilePath(selectedItem.id) }} />
-          
+          <Card.Cover source={{ uri: FilesService.Instance().GetCachedImage(selectedItem.id) }} />
           <FastImage
-            source={{uri: getFilePath(selectedItem.id) }}
+            source={{uri: FilesService.Instance().GetCachedImage(selectedItem.id) }}
             resizeMode={
               FastImage.resizeMode.contain
             }
           />
-           
         </Card>
        
       }
       
       { selectedItem != null &&
          <AclModalImage {...{
-          uri: getFilePath(selectedItem.id),
+          uri: FilesService.Instance().GetCachedImage(selectedItem.id),
           show: showModal,
-          close: handleModalClose
+          close: handleModalClose,
+          items: menuItems
         }}></AclModalImage>
       }
       {
@@ -194,13 +241,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  container: {
+  chipContainer: {
     marginTop: 8,
     display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-start"
-  },  
+  }, 
   chip: {
     marginRight: 4,
     marginBottom: 4
@@ -214,5 +261,5 @@ const styles = StyleSheet.create({
   },
   hide: {
     display: "none"
-  }
+  },
 })

@@ -3,21 +3,14 @@ import { Text } from 'react-native-paper';
 import { StyleSheet, FlatList, View, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import AclModalImage from '../../components/modals/AclModalImage';
+import { IAclImageGridProps } from '.';
+ 
 
-interface IImageGridDataProps {
-  items: [];
-}
-
-interface IAclImageGridProps {
-  items: [];
-  //options: object;
-  //change: () => void;
-}
-
-const ImageGrid: React.FunctionComponent<IAclImageGridProps> = (
+const AclGridImage: React.FunctionComponent<IAclImageGridProps> = (
   props
 ) => {
   const [imageuri, setImageuri] = useState('');
+  const [fileId, setFileId] = useState('');
   const [
     modalVisibleStatus, setModalVisibleStatus
   ] = useState(false);
@@ -41,10 +34,11 @@ const ImageGrid: React.FunctionComponent<IAclImageGridProps> = (
     setDataSource(props.items || []);
   }, [props]);
 
-  const showModalFunction = (visible, imageURL) => {
+  const showModalFunction = (visible, item) => {
     //handler to handle the click on image of Grid
     //and close button on modal
-    setImageuri(imageURL);
+    setImageuri(item.uri);
+    setFileId(item.id);
     setModalVisibleStatus(visible);
   };
 
@@ -59,41 +53,10 @@ const ImageGrid: React.FunctionComponent<IAclImageGridProps> = (
         <AclModalImage {...{
           uri: imageuri,
           show: modalVisibleStatus,
-          close: toggleModal
+          close: toggleModal,
+          items: props.menuItems
         }}></AclModalImage>
-        /*
-        <Modal
-          transparent={false}
-          animationType={'fade'}
-          visible={modalVisibleStatus}
-          onRequestClose={() => {
-            showModalFunction(!modalVisibleStatus, '');
-          }}>
-          <View style={styles.modelStyle}>
-            <FastImage
-              style={styles.fullImageStyle}
-              source={{uri: imageuri}}
-              resizeMode={
-                FastImage.resizeMode.contain
-              }
-            />
-            <TouchableOpacity
-              activeOpacity={0.5}
-              style={styles.closeButtonStyle}
-              onPress={() => {
-                showModalFunction(!modalVisibleStatus, '');
-              }}>
-              <FastImage
-                source={{
-                  uri:
-                    'https://raw.githubusercontent.com/AboutReact/sampleresource/master/close.png',
-                }}
-                style={{width: 35, height: 35}}
-              />
-            </TouchableOpacity>
-          </View>
-        </Modal>
-        */
+       
       ) : (
         <View style={styles.container}>
           <FlatList
@@ -104,7 +67,7 @@ const ImageGrid: React.FunctionComponent<IAclImageGridProps> = (
                   key={item.id}
                   style={{flex: 1}}
                   onPress={() => {
-                    showModalFunction(true, item.uri);
+                    showModalFunction(true, item);
                   }}>
                   <FastImage
                     style={styles.imageStyle}
@@ -125,12 +88,11 @@ const ImageGrid: React.FunctionComponent<IAclImageGridProps> = (
   );
 };
 
-export default ImageGrid;
+export default AclGridImage;
 
 
 const styles = StyleSheet.create({
   container: {
-  
     backgroundColor: '#ffffff',
   },
   titleStyle: {

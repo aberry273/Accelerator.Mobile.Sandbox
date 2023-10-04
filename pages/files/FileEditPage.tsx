@@ -2,14 +2,14 @@ import {useIsFocused} from '@react-navigation/native';
 import React, {useState, useCallback, useEffect } from 'react';
 import {View} from 'react-native';
 import {FAB, Portal, Provider, Title, Text, Modal, Button, List} from 'react-native-paper';
-import { getSingleFile, copyFileToCache, getFilePath } from '../../services/fs-service';
-import { generateGuid } from '../../services/file-db-service';
+import { getSingleFile, copyFileToCache, getFilePath } from '../../services/fs-service'; 
 import base from '../../styles/base';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import ContextualActionBar from '../../components/ContextualActionBar';
-import ModalScreen from '../../components/ModalScreen';
+import FilesService from '../../services/FilesService';
+import StoresService from '../../services/StoresService';
 
 import Constants from 'expo-constants';
 
@@ -22,6 +22,7 @@ import ScanFilePage from './../ScanFilePage';
 
 interface IFileEditPageProps {
   onCreate: () => void;
+  id: string,
   stores: []
 }
 
@@ -31,8 +32,21 @@ const tempFormData =
     {
       component: 'TextField',
       data: {
+        label: 'id',
+        name: 'id',
+        value: null,
+        placeholder: 'Store name..'
+      },
+      options: {
+        mode: 'flat',
+        hide: true
+      }
+    },
+    {
+      component: 'TextField',
+      data: {
         label: 'Name',
-        name: 'Name',
+        name: 'name',
         value: null,
         placeholder: 'File name..'
       },
@@ -44,7 +58,7 @@ const tempFormData =
       component: 'TextField',
       data: {
         label: 'Description',
-        name: 'Description',
+        name: 'description',
         value: null,
         placeholder: 'Description'
       },
@@ -53,27 +67,36 @@ const tempFormData =
         mode: 'flat'
       }
     },
-    /*
     {
-      component: 'SwitchField',
+      component: 'SelectField',
       data: {
-        label: 'Link my location',
-        name: 'LinkLocation',
-        value: false
+        label: 'Category',
+        name: 'category',
+        placeholder: 'Shopping',
+        items: [
+          {
+            key: 'Shopping',
+            value: 'Shopping'
+          },
+          {
+            key: 'Services',
+            value: 'Services'
+          },
+          {
+            key: 'Health',
+            value: 'Health'
+          },
+        ]
       },
       options: {
-        mode: 'flat',
-        style: 'padding: 8px'
-      },
-      change: async (field, data) => {
-        console.log('change() of SwitchField '+data)
+        hide: false
       }
-    },*/
+    },
     {
       component: 'SelectField',
       data: {
         label: 'Store',
-        name: 'StoreId',
+        name: 'storeId',
         placeholder: 'Stores',
         itemNameKey: 'name'
       },
@@ -85,13 +108,25 @@ const tempFormData =
       component: 'ChipField',
       data: {
         label: 'Add tags',
-        name: 'Tags',
+        name: 'tags',
         placeholder: 'insurance'
       },
       options: {
         hide: false
       }
-    }
+    },
+    {
+      component: 'ImageField',
+      data: {
+        label: 'Image',
+        name: 'file',
+        placeholder: 'File',
+        itemNameKey: 'file'
+      },
+      options: {
+        hide: false
+      }
+    },
   ]
 };
 
@@ -109,60 +144,62 @@ const FileEditPage: React.FunctionComponent<IFileEditPageProps> = (props) => {
   const [selectedItemName, setSelectedItemName] = useState('');
   const [showParentHeader, setShowParentHeader] = useState(false);
 
-  const [tempFile, setTempFile] = useState('');
   const [formState, setFormState] = useState(null);
+  const route = useRoute();
 
-  // Scan file
+  // On mount
+  useEffect(() => {
+    //Async wrapper
+    (async () => {
+      if(props.id == null) return;
+      const result = await FilesService.Instance().Get(props.id);
+      console.log(result);
+      updateFormFields(result);
+    })();
+
+    //unmount function
+    return () => {};
+  }, [props]);
+
+  // Redirect to parent page
   const saveFile = useCallback((file) => {
-    //console.log('set img to file');
-    console.log('setFile');
-    console.log(file);
-    setTempFile(file);
-    console.log('now set as');
-    console.log(tempFile);
-    //console.log(file);
-    //setShowParentHeader(!showParentHeader);
     navigation.navigate('Files');
   }, []);
 
   const scanFileState = {
     onSave: saveFile
   }
-
-  // Form
  
-  useEffect(() => {
-    tempFormData.fields[2].data.items = props.stores != null ? props.stores.map(x => { return {
-      name: x.name, value: x.id }
-    }) : [];
-    setFormState(tempFormData);
-  });
-
-  const addFileModel = useCallback(async (data) => {
-    console.log('storeAddPage.addFile()');
-    
-    data.file = tempFile;
-   
-    console.log('addFile');
-    console.log('scannedImage when adding file');
-    console.log(tempFile);
-    
-    if(data.tags != null) {
-      const tags = data.tags.join(',');
-      data.tags = tags.substring(0, tags.length - 1);;
+  const updateFormFields = useCallback((item) => {
+    //Set item data
+    if(item != null) {
+      for(var i = 0; i < tempFormData.fields.length; i++)
+      {
+        const field = tempFormData.fields[i];
+        const fieldName = field.data.name;
+        const value = item[fieldName];
+        if (value !== 'undefined') {
+          tempFormData.fields[i].data.value = item[fieldName]; 
+        }
+        // Set stores KV
+        if(fieldName == 'storeId') {
+          tempFormData.fields[i].data.items = props.stores; 
+        }
+      }
     }
-    //create new service & move to file-item-service
-    //manually set ID ahead of time to also use it to set the image file name
-    var id = generateGuid();
-    data.id = id;
+    setFormState(tempFormData);
+  }, [props])
 
-    await copyFileToCache(tempFile, id);
-    //Updating the file doesn't work in dev as the application GUID changes - This doesn't work
-    //data.file = getFilePath(id);
-    
-    props.onCreate(data);
-    navigation.goBack();
-  }, [tempFile]);
+  const updateFile = useCallback((data) => {
+    if (data.tags != null && data.tags !== "") {
+      const tags = data.tags.join(',');
+      //Remove final ',' if appended at the end
+      data.tags = tags.endsWith(',') ? tags.substring(0, tags.length - 1) : tags;
+    }
+    props.onUpdate(data);
+    //navigation.navigate('BrowseFile', data);
+//    navigation.goBack(data);
+  }, []);
   
   const closeHeader = useCallback(() => {
     setCabIsOpen(false);
@@ -186,17 +223,17 @@ const FileEditPage: React.FunctionComponent<IFileEditPageProps> = (props) => {
   }, [cabIsOpen]);
 
   return (
-    <StoreStack.Navigator initialRouteName="ScanFile"
+    <StoreStack.Navigator initialRouteName="EditDetails"
     screenOptions={{
       headerShown: false
     }}>
-      <StoreStack.Screen name="FileDetails" options={{
+      <StoreStack.Screen name="EditDetails" options={{
         headerShown: false,
         headerTitle: 'Edit file'
       }}>
         {props =>  
           <AclForm 
-            submit={(data) => addFileModel(data)}
+            submit={(data) => updateFile(data)}
             data={formState}
             options={{
               flex: 1,

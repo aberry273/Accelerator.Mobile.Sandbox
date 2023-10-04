@@ -18,7 +18,6 @@ import AddFriendForm from '../../screens/AddFriendForm';
 let tempFormData = 
 {
   fields: [
-
     {
       component: 'TextField',
       data: {
@@ -36,7 +35,7 @@ let tempFormData =
       component: 'TextField',
       data: {
         label: 'Name',
-        name: 'Name',
+        name: 'name',
         value: null,
         placeholder: 'Store name..'
       },
@@ -48,7 +47,7 @@ let tempFormData =
       component: 'TextField',
       data: {
         label: 'Description',
-        name: 'Description',
+        name: 'description',
         value: null,
         placeholder: 'Description'
       },
@@ -61,7 +60,7 @@ let tempFormData =
       component: 'LocationToggleField',
       data: {
         label: 'Add location',
-        name: 'Location',
+        name: 'location',
         value: null
       },
       options: {
@@ -89,19 +88,19 @@ let tempFormData =
       component: 'SelectField',
       data: {
         label: 'Category',
-        name: 'Category',
+        name: 'category',
         placeholder: 'Shopping',
         items: [
           {
-            key: 1,
+            key: 'Shopping',
             value: 'Shopping'
           },
           {
-            key: 2,
+            key: 'Services',
             value: 'Services'
           },
           {
-            key: 3,
+            key: 'Health',
             value: 'Health'
           },
         ]
@@ -114,7 +113,7 @@ let tempFormData =
       component: 'ChipField',
       data: {
         label: 'Add tags',
-        name: 'Tags',
+        name: 'tags',
         placeholder: 'insurance'
       },
       options: {
@@ -147,15 +146,14 @@ const StoreEditPage: React.FunctionComponent<IStoreEditPageProps> = (props) => {
     for(var i = 0; i < tempFormData.fields.length; i++)
     {
       const field = tempFormData.fields[i];
-      const fieldName = field.data.name.toLowerCase();
+      const fieldName = field.data.name;
       const value = route.params[fieldName];
-      
       if (value !== 'undefined') {
         tempFormData.fields[i].data.value = route.params[fieldName]; 
       }
     }
     setFormState(tempFormData);
-  });
+  }, [route]);
 
   const updateStore = useCallback((data) => {
     if(data.location != null && data.location.coords != null) {

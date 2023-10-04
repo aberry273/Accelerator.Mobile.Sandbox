@@ -40,11 +40,18 @@ const SelectField : React.FunctionComponent<IAclFormFieldProps> = (
     return value;
   }
 
+  const getItemKey = (item) => {
+    if(item == null) return null;
+    const value = itemIsObject(item) ? item.key : item;
+    return value;
+  }
+
   const onChange = (item) => {
-    const value = getItemValue(item);
+    //props.change(getItemValue(item));
+    props.change(getItemKey(item));
     
-    props.change(value);
-    setValue(value);
+    setValue(getItemKey(item));
+    setTextValue(getItemValue(item));
    
     closeMenu();
   }
@@ -57,6 +64,10 @@ const SelectField : React.FunctionComponent<IAclFormFieldProps> = (
     setValue(value);
     if (props.data.items != null)
       setItems(props.data.items || []);
+      //Set friendly label
+
+      const item = props.data.items != null ? props.data.items.filter(x => x.key == value)[0] : null;
+      setTextValue(getItemValue(item));
   }, []);
   
 
@@ -67,7 +78,7 @@ const SelectField : React.FunctionComponent<IAclFormFieldProps> = (
         value == null && <Chip style={[styles.chip]} icon="chevron-down" onPress={openMenu}>{label}</Chip>
       }
       {
-        value != null && <Chip style={[styles.chip]} icon="chevron-down" onPress={openMenu}>{value}</Chip>
+        value != null && <Chip style={[styles.chip]} icon="chevron-down" onPress={openMenu}>{textValue}</Chip>
       }
       {
         //<TextInput onFocus={openMenu} placeholder={placeholder} label={label} style={[styles.padding, props.options.hide ? styles.hide : styles.show]} value={value}></TextInput>

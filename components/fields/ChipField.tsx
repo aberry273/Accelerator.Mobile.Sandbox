@@ -26,6 +26,7 @@ const ChipField: React.FunctionComponent<IAclFormFieldProps> = (
     const arr = chips.slice(0);
     arr.splice(index, 1);
     setChips(arr);
+    props.change(arr);
   }
 
   const addChip = () => {
@@ -38,10 +39,10 @@ const ChipField: React.FunctionComponent<IAclFormFieldProps> = (
 
   React.useEffect(() => {
     setLabel(props.data.label);
-    setValue(props.data.value || '');
-    const chips = value != null && value.length > 0 ? value.split(',') : [];
+    setValue('');
+    const chips = props.data.value != null && props.data.value.length > 0 ? props.data.value.split(',') : [];
     setChips(chips);
-  }, [props]);
+  }, [props.data]);
  
   return (
     <View>

@@ -25,7 +25,7 @@ const tempFormData =
       component: 'TextField',
       data: {
         label: 'Name',
-        name: 'Name',
+        name: 'name',
         value: null,
         placeholder: 'Store name..'
       },
@@ -37,7 +37,7 @@ const tempFormData =
       component: 'TextField',
       data: {
         label: 'Description',
-        name: 'Description',
+        name: 'description',
         value: null,
         placeholder: 'Description'
       },
@@ -50,7 +50,7 @@ const tempFormData =
       component: 'LocationToggleField',
       data: {
         label: 'Add location',
-        name: 'Location',
+        name: 'location',
         value: null
       },
       options: {
@@ -78,19 +78,19 @@ const tempFormData =
       component: 'SelectField',
       data: {
         label: 'Category',
-        name: 'Category',
+        name: 'category',
         placeholder: 'Shopping',
         items: [
           {
-            key: 1,
+            key: 'Shopping',
             value: 'Shopping'
           },
           {
-            key: 2,
+            key: 'Services',
             value: 'Services'
           },
           {
-            key: 3,
+            key: 'Health',
             value: 'Health'
           },
         ]
@@ -103,7 +103,7 @@ const tempFormData =
       component: 'ChipField',
       data: {
         label: 'Add tags',
-        name: 'Tags',
+        name: 'tags',
         placeholder: 'insurance'
       },
       options: {
@@ -142,7 +142,6 @@ const StoreAddPage: React.FunctionComponent<IStoreAddPageProps> = (props) => {
       const tags = data.tags.join(',');
       data.tags = tags.substring(0, tags.length - 1);;
     }
-    console.log(JSON.parse(JSON.stringify(data)));
     props.onCreate(data);
     navigation.goBack();
   }, []);

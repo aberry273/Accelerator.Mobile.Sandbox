@@ -1,7 +1,8 @@
 import React, {useState, useCallback, useEffect } from 'react';
 import {View} from 'react-native';
 import { FAB, Portal, Provider, Title, Text, Modal, Button, List } from 'react-native-paper';
-import { TextField, SelectField, RadioButtonField, SwitchField, ChipsField, ChipField, LocationToggleField, ToggleField } from '../fields';
+import { TextField, SelectField, RadioButtonField, SwitchField, ImageField, ChipField, LocationToggleField, ToggleField } from '../fields';
+import { IAclFormProps } from '.'
 
 const FieldComponents = {
   TextField,
@@ -9,28 +10,9 @@ const FieldComponents = {
   LocationToggleField,
   RadioButtonField,
   SwitchField,
-  ChipsField,
+  ImageField,
   ChipField,
   ToggleField
-}
-
-interface IAclFormFieldProps {
-  data: object;
-  key: number,
-  options: object;
-  change: () => void;
-}
-
-interface IAclFormDataProps {
-  fields: Array<IAclFormFieldProps>;
-  submit: () => void;
-}
-interface IAclFormProps {
-  title: string;
-  data: IAclFormDataProps;
-  options: object;
-  fields: Array<IAclFormFieldProps>;
-  submit: () => void;
 }
 
 const AclForm: React.FunctionComponent<IAclFormProps> = (
@@ -41,15 +23,14 @@ const AclForm: React.FunctionComponent<IAclFormProps> = (
   const [renderIndex, setRenderIndex] = useState(0);
 
   useEffect (() => {
-    console.log('On Prop Change');
-    console.log(props.data);
+    
     if(props.data == null) return;
     for(var i = 0; i < props.data.fields.length; i++) {
       const field = props.data.fields[i];
-      const fieldName = field.data.name.toLowerCase();
+      const fieldName = field.data.name;
       if (field.data.value === null || field.data.value === 'undefined')
         continue;
-      else if (field.component == 'ChipField' && field.data.value!!) {
+      else if (field.component == 'ChipField' && field.data.value) {
         formData[fieldName] = field.data.value.split(',');
       } else {
         formData[fieldName] = field.data.value;
@@ -59,7 +40,7 @@ const AclForm: React.FunctionComponent<IAclFormProps> = (
   }, [props])
  
   const updateFormData = useCallback((field, data) => {
-      const fieldName = field.data.name.toLowerCase();
+      const fieldName = field.data.name;
       formData[fieldName] = data;
       setFormData(formData);
   }, [formData]);

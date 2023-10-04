@@ -6,16 +6,16 @@ import base from '../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation, NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getFiles, createFile, deleteFile } from '../../services/file-db-service';
-import { copyFileToCache, getFilePath } from '../../services/fs-service';
+import StoresService from '../../services/StoresService';
+import FilesService from '../../services/FilesService';
 import { FileItem, StoreItem } from '../../models';
 import ContextualActionBar from '../../components/ContextualActionBar';
 import ModalScreen from '../../components/ModalScreen'; 
 
-import { getStores } from '../../services/store-db-service';
-
 const Stack = createNativeStackNavigator(); 
 const StoreStack = createNativeStackNavigator(); 
+const _filesService = FilesService.Instance();
+const _storesService = StoresService.Instance();
 
 import FileListingPage from './FileListingPage';
 import FileAddPage from './FileAddPage';
@@ -23,21 +23,30 @@ import FileEditPage from './FileEditPage';
 import FileBrowsePage from './FileBrowsePage';
 import ScanFilePage from './../ScanFilePage';
 
-const testFunction = () => {
-  console.log('testFunciton');
-}
-
 function Root() {
+  const [queryText, setQueryText] = useState('');
   const [files, setFiles] = useState<FileItem[]>([]);
-  const [stores, setStores] = useState<StoreItem[]>([]);
+  const [storeKVs, setStoreKVs] = useState<StoreItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileItem>(null);
   const [scannedImage, setScannedImage] = useState<string>('');
   const navigation = useNavigation();
 
-  
-  const editFile = useCallback(async (file) => {
-    setSelectedFile(file);
-    navigation.navigate('EditFile');
+  const updateFile = useCallback(async (file) => {
+    try {
+      await _filesService.Update(file);
+      loadFiles();
+
+      setSelectedFile(file);
+      navigation.goBack();
+      //setSelectedFile(file);
+      //navigation.navigate('BrowseFile');
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  const openEditFile = useCallback(async (file) => {
+    navigation.push('EditFile', file);
   }, [])
 
   const selectFile = useCallback(async (file) => {
@@ -47,16 +56,8 @@ function Root() {
   
   const loadFiles = useCallback(async () => {
     try {
-      console.log('stackpage loadFiles()')
-      //const db = getDBConnection();
-      getFiles((result) => { 
-        if(result.length) {
-          setFiles(result);
-          console.log(files.length);
-        } else {
-          console.log('No stores found');
-        }
-      })
+      const filesAsync = await _filesService.GetAll();
+      setFiles(filesAsync);
     } catch (error) {
       console.error(error);
     }
@@ -66,20 +67,27 @@ function Root() {
     loadFiles();
   }, [loadFiles]);
 
+
+  const filterFiles = useCallback(async (queryText) => {
+    try {
+      console.log('stackpage filterFiles()')
+      //const db = getDBConnection();
+      const results = await _filesService.Search({ name: queryText });
+      setFiles(results);
+      setQueryText(queryText);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
   //Stores
 
   const loadStores = useCallback(async () => {
     try {
       console.log('FileStackPage loadStores()')
       //const db = getDBConnection();
-      getStores((result) => { 
-        if(result.length) {
-          setStores(result);
-          console.log(stores.length);
-        } else {
-          console.log('No stores found');
-        }
-      })
+      const stores = await _storesService.GetAll();
+      const storeKV = StoresService.Instance().GetKeyValues(stores)
+      setStoreKVs(storeKV);
     } catch (error) {
       console.error(error);
     }
@@ -90,77 +98,57 @@ function Root() {
   }, [loadStores]);
   //Add file
 
-  const addFile = useCallback((file) => {
-  
-    createFile(file, async (result) => { 
-      console.log('addFile response');
-      
-      loadFiles();
-    })
-
-  }, []);
-
-  const updateFileItem = useCallback(async (file) => {
+  const addFile = useCallback(async (file) => {
     try {
-      /*
-      updateFile(file, (result) => { 
-        loadFiles();
-      });
-      */
+      await _filesService.CreateWithFile(file, file.tempFile);
+      loadFiles();
     } catch (error) {
       console.error(error);
     }
   }, []);
-  const copyFileItem = useCallback(async (file) => {
+ 
+  const copyFile = useCallback(async (id) => {
     try {
-      createFile(file, (result) => { 
-        loadFiles();
-      });
+      await _filesService.Copy(id);
+      loadFiles();
     } catch (error) {
       console.error(error);
     }
   }, []);
   
-  const removeFile = useCallback(async (file) => {
+  const removeFile = useCallback(async (id) => {
     try {
+      if(id == null) return;
+      await _filesService.Delete(id);
       loadFiles();
-      if(file == null) return;
-      const id = file.id;
-      //file.map is undefined
-      const ids = files.map(x => x.id);
-      deleteFile(id, (result) => {
-        const index = ids.indexOf(id);
-        if(index > -1)
-          files.splice(index, 1);
-        setFiles(files.slice(0));
-      })
     } catch (error) {
       console.error(error);
     }
-  }, []);
-
-
-  const saveScannedFile = useCallback((file) => {
-    console.log('saveScannedFile');
-    setScannedImage(file);
   }, []);
 
   const browseFileState = {
     onDelete: removeFile,
-    onCopy: copyFileItem,
-    onEdit: editFile,
-    file: selectedFile
+    onCopy: copyFile,
+    onEdit: openEditFile,
+    file: selectedFile,
+    id: selectedFile != null ? selectedFile.id : null,
+    name: selectedFile != null ? selectedFile.name : null
   }
-  const scanFileState = {
-    onSave: saveScannedFile
+  const editFileState = {
+    data: {},
+    id: selectedFile != null ? selectedFile.id : null,
+    onUpdate: updateFile,
+    stores: storeKVs
   }
   const addFileState = {
     onCreate: addFile,
-    stores: stores
+    stores: storeKVs
   }
   const listingFileState = {
     items: files,
-    onSelect: selectFile
+    queryText: queryText,
+    onSelect: selectFile,
+    onSearch: filterFiles
   }
   //component={StoreBrowsePage} /
   return (
@@ -186,15 +174,10 @@ function Root() {
       }}>
         {props => <FileBrowsePage {...browseFileState} />}
       </StoreStack.Screen>
-      <StoreStack.Screen name="ScanFile" options={{
-        headerTitle: 'Scan file'
-      }}>
-        {props => <ScanFilePage {...scanFileState} />}
-      </StoreStack.Screen>
       <StoreStack.Screen name="EditFile" options={{
         headerTitle: 'Edit file'
       }}>
-        {props => <FileEditPage {...scanFileState} />}
+        {props => <FileEditPage {...editFileState} />}
       </StoreStack.Screen>
     </StoreStack.Navigator>
   );

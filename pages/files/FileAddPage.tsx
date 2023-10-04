@@ -1,15 +1,12 @@
 import {useIsFocused} from '@react-navigation/native';
 import React, {useState, useCallback, useEffect } from 'react';
 import {View} from 'react-native';
-import {FAB, Portal, Provider, Title, Text, Modal, Button, List} from 'react-native-paper';
-import { getSingleFile, copyFileToCache, getFilePath } from '../../services/fs-service';
-import { generateGuid } from '../../services/file-db-service';
+import {FAB, Portal, Provider, Title, Text, Modal, Button, List} from 'react-native-paper'; 
 import base from '../../styles/base';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import ContextualActionBar from '../../components/ContextualActionBar';
-import ModalScreen from '../../components/ModalScreen';
+import ContextualActionBar from '../../components/ContextualActionBar'; 
 
 import Constants from 'expo-constants';
 
@@ -32,7 +29,7 @@ const tempFormData =
       component: 'TextField',
       data: {
         label: 'Name',
-        name: 'Name',
+        name: 'name',
         value: null,
         placeholder: 'File name..'
       },
@@ -44,7 +41,7 @@ const tempFormData =
       component: 'TextField',
       data: {
         label: 'Description',
-        name: 'Description',
+        name: 'description',
         value: null,
         placeholder: 'Description'
       },
@@ -53,27 +50,36 @@ const tempFormData =
         mode: 'flat'
       }
     },
-    /*
     {
-      component: 'SwitchField',
+      component: 'SelectField',
       data: {
-        label: 'Link my location',
-        name: 'LinkLocation',
-        value: false
+        label: 'Category',
+        name: 'category',
+        placeholder: 'Shopping',
+        items: [
+          {
+            key: 'Shopping',
+            value: 'Shopping'
+          },
+          {
+            key: 'Services',
+            value: 'Services'
+          },
+          {
+            key: 'Health',
+            value: 'Health'
+          },
+        ]
       },
       options: {
-        mode: 'flat',
-        style: 'padding: 8px'
-      },
-      change: async (field, data) => {
-        console.log('change() of SwitchField '+data)
+        hide: false
       }
-    },*/
+    },
     {
       component: 'SelectField',
       data: {
         label: 'Store',
-        name: 'StoreId',
+        name: 'storeId',
         placeholder: 'Stores',
         itemNameKey: 'name'
       },
@@ -85,7 +91,7 @@ const tempFormData =
       component: 'ChipField',
       data: {
         label: 'Add tags',
-        name: 'Tags',
+        name: 'tags',
         placeholder: 'insurance'
       },
       options: {
@@ -150,14 +156,15 @@ const FileAddPage: React.FunctionComponent<IFileAddPageProps> = (props) => {
     
     if(data.tags != null) {
       const tags = data.tags.join(',');
-      data.tags = tags.substring(0, tags.length - 1);;
+      //Remove final ',' if appended at the end
+      data.tags = tags.endsWith(',') ? tags.substring(0, tags.length - 1) : tags;
     }
     //create new service & move to file-item-service
-    //manually set ID ahead of time to also use it to set the image file name
-    var id = generateGuid();
-    data.id = id;
+ 
+    //MIGRATE THIS TO THE NEW SERVICE
+    data.tempFile = tempFile;
+    //await copyFileToCache(tempFile, id);
 
-    await copyFileToCache(tempFile, id);
     //Updating the file doesn't work in dev as the application GUID changes - This doesn't work
     //data.file = getFilePath(id);
     

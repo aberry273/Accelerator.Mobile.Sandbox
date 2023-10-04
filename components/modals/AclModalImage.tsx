@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, FAB } from 'react-native-paper';
+import { Text, FAB, PaperProvider } from 'react-native-paper';
 import { StyleSheet, FlatList, View, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
-import FastImage from 'react-native-fast-image';
-
-interface IAclModalImageProps {
-  uri: string;
-  show: boolean;
-  //options: object;
-  close: () => void;
-}
+import { AclImagePinchZoom } from '../../components/images';
+import { AclMenu } from '../../components/menus';
+import { IAclModalImageProps } from '.';
 
 const AclModalImage: React.FunctionComponent<IAclModalImageProps> = (
   props
@@ -16,37 +11,45 @@ const AclModalImage: React.FunctionComponent<IAclModalImageProps> = (
   const [imageuri, setImageuri] = useState('');
   const [modalVisibleStatus, setModalVisibleStatus] = useState(false);
 
+  const menuState = {
+    title: 'Menu',
+    items: props.items
+  }
+
   useEffect(() => {
     setImageuri(props.uri);
     setModalVisibleStatus(props.show);
   }, [props]);
-
+  
   return (
     <SafeAreaView style={styles.container}>
       {modalVisibleStatus && 
         <Modal
           transparent={false}
           animationType={'fade'}>
-          <View style={styles.modelStyle}>
-            <FastImage
-              style={styles.fullImageStyle}
-              source={{uri: imageuri}}
-              resizeMode={
-                FastImage.resizeMode.contain
-              }
-            />
-            <TouchableOpacity
-              activeOpacity={0.5}
-              style={styles.closeButtonContainer}>
-                <FAB
-                  icon="close"
-                  onPress={() => {
-                    props.close()
-                  }}
-                />
-                
-            </TouchableOpacity>
-          </View>
+          <PaperProvider>
+            <View style={styles.modelStyle}>
+              <AclImagePinchZoom {...{
+                uri: imageuri
+              }} />
+                <View style={[styles.menuButtonContainer]}>
+                  <FAB
+                    variant="primary"
+                    mode="flat"
+                    icon="close"
+                    onPress={() => {
+                      props.close()
+                    }}
+                    />
+                </View>
+                {
+                  (props.items != null && props.items.length > 0) &&
+                  <View style={[styles.closeButtonContainer]}>
+                    <AclMenu {...menuState} />
+                  </View>
+                }  
+              </View>
+            </PaperProvider>
         </Modal>
       }
     </SafeAreaView>
@@ -88,9 +91,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
+  menuButtonContainer: {
+    top: 50,
+    left: 20,
+    position: 'absolute',
+  },
   closeButtonContainer: {
     top: 50,
     right: 20,
     position: 'absolute',
+  },
+  buttonContainer: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start"
   },
 });

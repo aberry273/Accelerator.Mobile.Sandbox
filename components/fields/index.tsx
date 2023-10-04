@@ -3,8 +3,8 @@ import RadioButtonField from './RadioButtonField';
 import SelectField from './SelectField';
 import SwitchField from './SwitchField';
 import TextField from './TextField';
-import ChipsField from './ChipsField';
 import ChipField from './ChipField';
+import ImageField from './ImageField';
 import LocationToggleField from './LocationToggleField';
 import ToggleField from './ToggleField';
 
@@ -14,8 +14,8 @@ export {
     SelectField,
     SwitchField,
     TextField,
-    ChipsField,
     ChipField,
+    ImageField,
     LocationToggleField,
     ToggleField
 }

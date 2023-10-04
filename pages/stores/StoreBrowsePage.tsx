@@ -6,22 +6,20 @@ import base from '../../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import ContextualActionBar from '../../components/ContextualActionBar';
-import { getSingleFile, getFilePath } from '../../services/fs-service';
-import MapsCard from '../../components/MapsCard';
-import ModalScreen from '../../components/ModalScreen';
-import DocumentScannerCard from '../../components/DocumentScannerCard';
-import { getFiles, searchFiles, createFile, deleteFile } from '../../services/file-db-service';
-import { getStore } from '../../services/store-db-service';
-import ImageGrid from '../../components/grids/ImageGrid';
+import { AclCardsMap } from '../../components/cards';
+import { AclGridImage } from '../../components/grids';
 
 import AddFriendForm from '../../screens/AddFriendForm';
 import { FileItem, StoreItem } from '../../models';
+import StoresService from '../../services/StoresService';
+import FilesService from '../../services/FilesService';
 
 interface IStoreBrowsePageProps {
   onDelete: () => void;
   onCopy: () => void;
   onEdit: () => void;
   store: StoreItem,
+  id: string,
   title: string
 }
 
@@ -38,9 +36,46 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
   const [testText, setTestText] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
  
+  // On mount
   useEffect(() => {
-    setStore();
-  }, [props]); 
+    //Async wrapper
+    (async () => {
+      await initializeState();
+    })();
+    //unmount function
+    return () => {
+      console.log('StoreBrowsePage.Unmount');
+    };
+  }, [props]);
+
+  const initializeState = async () => {
+    if(selectedItem != null) return;
+      //Set name so not empty
+      setNavigation(' ');
+      if(props.id == null) return;
+      const result = await StoresService.Instance().Get(props.id);
+      setSelectedItem(result);
+      setNavigation(result.name);
+      ////
+      const files = await FilesService.Instance().Search({storeId: props.id}); 
+      if(files.length) {
+        const gridFiles = files.map(x => {
+          x.uri = FilesService.Instance().GetCachedImage(x.id);
+          return x;
+        });
+        setFiles(gridFiles);
+      }
+  }
+
+  // On navigation.goBack()
+  useEffect(() => {
+    (async () => {
+      // Reset page state
+      setSelectedItem(null);
+      await initializeState();
+    })();
+    //reload
+  }, [isScreenFocused]);
   
   const goBack = useCallback(async () => { 
     navigation.goBack('Stores');
@@ -60,53 +95,6 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
     ),
     });
   }, [])
-
-
-  const loadFiles = useCallback(async () => {
-    try {
-      console.log('stackpage loadFiles()')
-      //const db = getDBConnection();
-      if(selectedItem == null) return;
-      const query = {
-        storeId: selectedItem.id
-      }
-      searchFiles(query, (result) => { 
-        console.log('searchFiles');
-        if(result.length) {
-
-          const gridFiles = result.map(x => {
-            x.uri = getFilePath(x.id);
-            return x;
-          });
-
-          setFiles(gridFiles);
-        } else {
-          console.log('No files found');
-        }
-      })
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
- 
-  const setStore = useCallback(() => {
-    if(props.store != null) {
-      //get store from id, this ensure it's always up to date when loading
-      //I.E. after a user edits the store
-      
-      setNavigation(props.store.name);
-      getStore(props.store.id, (result) => { 
-        setSelectedItem(result);
-        //setNavigation(props.store.name);
-        setNavigation(result.name);
-   
-        loadFiles();
-      })
-
-     
- 
-    }
-  }, []); 
   
   const removeStore = useCallback(async () => {
       props.onDelete(props.store);
@@ -121,20 +109,35 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
   const editStore = useCallback(async () => {
       //props.onEdit(props.store);
       navigation.push('EditStore', props.store);
-    }, []);
-   // <DocumentScannerCard />
+    }, [selectedItem]);
+    
+  const menuItems = [
+    {
+      label: 'Open in files',
+      trailingIcon: 'home',
+      onPress: async (item) => { 
+        console.log('share');
+        navigation.navigate('BrowseFile');
+       
+        }
+    }
+  ];
+
   return (
     <View style={base.left}>
       
       { selectedItem != null && 
-        <Card>
-          <Card.Content> 
+        <Card elevation={0} style={[styles.cardContainer]}>
+          <Card.Content>
+            
+          { selectedItem.lat != null &&
           <View style={[styles.mapContainer]}>
-            <MapsCard latitude={selectedItem.lat} longitude={selectedItem.lng}  />
-          </View>
+            <AclCardsMap latitude={selectedItem.lat} longitude={selectedItem.lng}  />
+          </View> 
+          }
             <View style={[styles.container]}>
               <Text variant="bodyMedium">Category:</Text> 
-              <Chip >{selectedItem.category}</Chip>
+              <Chip>{selectedItem.category}</Chip>
               <Divider />
             </View>
             <View style={[styles.container]}>
@@ -150,12 +153,14 @@ const StoreBrowsePage: React.FunctionComponent<IStoreBrowsePageProps> = (props) 
               <Text variant="bodyMedium">Description:</Text> 
             </View>
               <Text variant="">{selectedItem.description}</Text> 
-          </Card.Content> 
-            
-          <ImageGrid {...{
-              items: files
-            }}></ImageGrid>
+          </Card.Content>  
+         
+          <AclGridImage {...{
+            items: files,
+            menuItems: menuItems
+          }} />
         </Card>
+        
       }
       <Portal>
         <FAB
@@ -193,6 +198,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-start"
+  },  
+  cardContainer: {
+    overflow: "scroll",
   },  
   chip: {
     marginRight: 4,

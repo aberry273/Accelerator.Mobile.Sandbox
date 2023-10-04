@@ -6,14 +6,14 @@ import base from '../styles/base';
 import { StyleSheet } from 'react-native';
 import {useNavigation, NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getStores, createStore, searchStores, updateStore, deleteStore } from '../../services/store-db-service';
 import { StoreItem } from '../../models';
 import ContextualActionBar from '../../components/ContextualActionBar';
 import ModalScreen from '../../components/ModalScreen'; 
-
+import StoresService from '../../services/StoresService';
 
 const Stack = createNativeStackNavigator(); 
 const StoreStack = createNativeStackNavigator(); 
+const _storesService = StoresService.Instance();
 
 import StoreListingPage from './StoreListingPage';
 import StoreAddPage from './StoreAddPage';
@@ -40,15 +40,11 @@ function Root() {
   const loadStores = useCallback(async () => {
     try {
       console.log('stackpage loadStores()')
+
       //const db = getDBConnection();
-      getStores((result) => { 
-        if(result.length) {
-          setStores(result);
-          console.log(stores.length);
-        } else {
-          console.log('No stores found');
-        }
-      })
+      const results = await _storesService.GetAll();
+      setStores(results);
+  
     } catch (error) {
       console.error(error);
     }
@@ -58,10 +54,10 @@ function Root() {
     try {
       console.log('stackpage filterStores()')
       //const db = getDBConnection();
-      searchStores({ name: queryText }, (result) => { 
-        setStores(result);
-        setQueryText(queryText);
-      })
+      const results = await _storesService.Search({ name: queryText });
+      setStores(results);
+      setQueryText(queryText);
+    
     } catch (error) {
       console.error(error);
     }
@@ -71,21 +67,15 @@ function Root() {
     loadStores();
   }, [loadStores]);
 
-  const addStore = useCallback((store) => {
-
-    createStore(store, (result) => { 
-      console.log('addStore response');
-     
-      loadStores();
-    })
-
+  const addStore = useCallback(async (store) => {
+    await _storesService.Create(store);
+    loadStores();
   }, []);
 
   const editStore = useCallback(async (store) => {
     try {
-      updateStore(store, (result) => { 
-        loadStores();
-      })
+      await _storesService.Update(store);
+      loadStores();
     } catch (error) {
       console.error(error);
     }
@@ -93,9 +83,8 @@ function Root() {
 
   const copyStore = useCallback(async (store) => {
     try {
-      addStore(store, (result) => {
-        loadStores(); 
-      })
+      await _storesService.Copy(store.id);
+      loadStores();
     } catch (error) {
       console.error(error);
     }
@@ -103,15 +92,9 @@ function Root() {
   
   const removeStore = useCallback(async (store) => {
     try {
+
+      await _storesService.Delete(store.id);
       loadStores();
-      const id = store.id;
-      const ids = stores.map(x => x.id);
-      deleteStore(id, (result) => {
-        const index = ids.indexOf(id);
-        if(index > -1)
-          stores.splice(index, 1);
-        setStores(stores.slice(0));
-      })
     } catch (error) {
       console.error(error);
     }
@@ -119,7 +102,6 @@ function Root() {
 
 
   const saveFile = useCallback(async (file) => {
-    console.log(file);
     navigation.goBack('Stores');
     //console.log(selectedStore);
   }, []);
@@ -128,11 +110,9 @@ function Root() {
     onDelete: removeStore,
     onCopy: copyStore,
     //onEdit: updateStore,
-    store: selectedStore
-  }
-  const scanFileState = {
-    onSave: saveFile
-  }
+    store: selectedStore,
+    id: selectedStore != null ? selectedStore.id : null,
+  } 
   const addStoreState = {
     onCreate: addStore
   }
@@ -175,11 +155,7 @@ function Root() {
       }}>
         {props => <StoreEditPage {...editStoreState} />}
       </StoreStack.Screen>
-      <StoreStack.Screen name="ScanFile" options={{
-        headerTitle: 'Scan File'
-      }}>
-        {props => <ScanFilePage {...scanFileState} />}
-      </StoreStack.Screen>
+    
     </StoreStack.Navigator>
   );
 }
