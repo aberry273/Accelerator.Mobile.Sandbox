@@ -8,7 +8,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import ContextualActionBar from '../../components/ContextualActionBar';
 import FastImage from 'react-native-fast-image';
 import AclModalImage from '../../components/modals/AclModalImage';
-import Share from 'react-native-share';
+//import Share from 'react-native-share';
 
 import FilesService from '../../services/FilesService';
 import StoresService from '../../services/StoresService';
@@ -128,7 +128,8 @@ const FileBrowsePage: React.FunctionComponent<IFileBrowsePageProps> = (props) =>
     filename: 'test' , // only for base64 file in Android
   };
 
-  const menuItems = [
+  const menuItems = []
+  /*[
     {
       label: 'Share by email',
       icon: 'home',
@@ -142,7 +143,8 @@ const FileBrowsePage: React.FunctionComponent<IFileBrowsePageProps> = (props) =>
        }
     }
   ];
-  
+  */
+
    // <DocumentScannerCard />
 
   return (

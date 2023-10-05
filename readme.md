@@ -26,3 +26,12 @@ https://www.geeksforgeeks.org/text-detection-and-extraction-using-opencv-and-ocr
 
 3. import document
 https://learnopencv.com/automatic-document-scanner-using-opencv/
+
+
+4. Emulate on windows
+https://stackoverflow.com/questions/52751874/expo-run-on-android-emulator-using-windows-10
+
+TurboModuleRegistry.getEnforcing(...): 'RNShare' could not be found. Verify that a module by this name is registered in the native binary., js engine: hermes > 
+
+https://github.com/react-native-share/react-native-share/issues/1414
+

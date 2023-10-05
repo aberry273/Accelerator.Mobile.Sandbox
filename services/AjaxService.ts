@@ -22,6 +22,8 @@ export default class AjaxService {
 
     async Post(url: string, data: any) {
         console.log("--------- POST")
+        console.log(url);
+        console.log(data);
         return await axios.post(url, data);
     }
 

@@ -46,7 +46,7 @@ const SignInPage: React.FunctionComponent<ISignInPageProps> = (props) => {
   });
 
   const login = useCallback(async (data) => {
-    const url = 'https://localhost:30001/posturl';
+    const url = 'https://192.168.1.72:44322/PublicAuthentication/SocialLogin?provider=facebook';
     try {
       const response = await AjaxService.Instance().Post(url, data);
       console.log(response);
