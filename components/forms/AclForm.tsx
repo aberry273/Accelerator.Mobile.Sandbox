@@ -1,11 +1,12 @@
 import React, {useState, useCallback, useEffect } from 'react';
 import {View} from 'react-native';
 import { FAB, Portal, Provider, Title, Text, Modal, Button, List } from 'react-native-paper';
-import { TextField, SelectField, RadioButtonField, SwitchField, ImageField, ChipField, LocationToggleField, ToggleField } from '../fields';
+import { TextField, TextVoiceField, SelectField, RadioButtonField, SwitchField, ImageField, ChipField, LocationToggleField, ToggleField } from '../fields';
 import { IAclFormProps } from '.'
 
 const FieldComponents = {
   TextField,
+  TextVoiceField,
   SelectField,
   LocationToggleField,
   RadioButtonField,

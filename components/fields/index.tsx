@@ -3,6 +3,7 @@ import RadioButtonField from './RadioButtonField';
 import SelectField from './SelectField';
 import SwitchField from './SwitchField';
 import TextField from './TextField';
+import TextVoiceField from './TextVoiceField';
 import ChipField from './ChipField';
 import ImageField from './ImageField';
 import LocationToggleField from './LocationToggleField';
@@ -14,6 +15,7 @@ export {
     SelectField,
     SwitchField,
     TextField,
+    TextVoiceField,
     ChipField,
     ImageField,
     LocationToggleField,

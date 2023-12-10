@@ -16,6 +16,9 @@ import ProfilePage from './pages/ProfilePage';
 import SignInPage from './pages/auth/SignInPage';
 import LoadingPage from './pages/LoadingPage';
 
+
+import DocumentPage from './pages/documents/DocumentPage';
+
 import {combineThemes} from './theme';
 
 import useAuth from './hooks/useAuth';
@@ -34,6 +37,13 @@ export default function App() {
   
   const getTabItems = function() {
     const items = [
+      {
+        name: 'Document',
+        label: 'Documents',
+        component: DocumentPage,
+        icon: 'document',
+        headerShown: false
+      },
       {
         name: 'Files',
         label: 'Files',
